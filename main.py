@@ -1,4 +1,5 @@
 import numpy as np
+import random as r
 
 class Piece():
   def __init__(self, code):
@@ -19,7 +20,7 @@ class Piece():
 
   def print(self):
     print("print piece")
-    for i in range (4):
+    for i in range(4):
       for j in range(4):
         print(self.piece[i][j], end=" ")
       print("")
@@ -58,8 +59,8 @@ class Board():
   def __init__(self):
     for i in range(8):
         row = []
-        value = "X"
         for j in range(7):
+            value = "X"
             # first 2 rows
             if i <= 1 and not j >= 6:
                 value = "-"
@@ -72,11 +73,52 @@ class Board():
             row.append(value)
         self.matrix.append(row)
 
+  def get(self):
+    return self.matrix
+
   def print(self):
-
-    print("Puzzle matrix is")
-
     for i in range (8):
       for j in range(7):
           print(self.matrix[i][j], end=" ")
       print("")
+
+  def get_random_piece(self):
+    return pieces.pop(r.randint(0,9))
+
+b = Board()
+b.print()
+
+p = b.get_random_piece()
+p.print()
+p = b.get_random_piece()
+p.print()
+
+print(len(pieces))
+
+def solve():
+  b = Board()
+  b.print()
+
+  print(b.get())
+
+  # TODO: find next available spot
+  for i in range(8):
+        row = []
+        for j in range(7):
+            value = "X"
+            # first 2 rows
+            if i <= 1 and not j >= 6:
+                value = "-"
+            # middle rows
+            if i > 1 and not i > 6:
+                value = "-"
+            # last row
+            if i == 7 and not j <= 3:
+                value = "-"
+            row.append(value)
+
+  # TODO: see if piece fits on board
+
+  # TODO: rotate piece if it doesn't fit
+
+solve()
