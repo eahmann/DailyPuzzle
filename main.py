@@ -7,51 +7,63 @@ class Piece():
     self.create(code)
 
   def create(self, code):
-    index = 0
-    for i in range(4):
-      row = []
-      for j in range(4):
-          row.append(code[index])
-          index += 1
-      self.piece.append(row)
+    # Split the piece code string into rows
+    row_delimiter = "|"
+    split_code = code.split(row_delimiter)
+
+    # for each row, split the string and create 2d array
+    for i in range(len(split_code)):
+      row = split_code[i].split()
+      self.piece.append(list(row[0]))
 
   def get(self):
-    return self.piece
+    return np.array(self.piece)
 
   def print(self):
-    print("print piece")
-    for i in range(4):
-      for j in range(4):
+    for i in range(len(self.piece)):
+      for j in range(len(self.piece[0]) ):
         print(self.piece[i][j], end=" ")
       print("")
 
   def flipX(self):
-    self.piece = np.fliplr(self.piece)
+    self.piece = np.fliplr(self.get())
 
   def flipY(self):
-    self.piece = np.flipud(self.piece)
+    self.piece = np.flipud(self.get())
 
   def rot90(self):
-    self.piece = np.rot90(self.piece)
+    self.piece = np.rot90(self.get())
 
-piece_defs = ["000-00----------","11--1---1---1---", "22--2---22------", "333---3---------","--4-444-4-------", "-55-55----------", "666---6---------", "7---7---777-----", "--8-888---8-----", "9999------------"]
+piece_defs = ["000|00-","11|1-|1-|1-", "22|2-|22", "333|3--","--4|444|4--", "-55|55-", "666|-6-|-6-", "7--|7--|777", "-8|88|8-|8-", "9999"]
 
 pieces = [Piece(i) for i in piece_defs]
 
-for i in range(len(pieces)): pieces[i].print()
+for i in range(len(pieces)): 
+    print("\nnormal")
+    #pieces[i].print()
+    print(pieces[i].get())
 
-pieces[5].print()
-pieces[5].flipY()
+    # print("\nflipY 1")
+    # pieces[i].flipY()
+    # print(pieces[i].get())
 
-pieces[5].print()
-pieces[5].flipY()
-pieces[5].flipX()
+    # print("\nrot90 1")
+    # pieces[i].rot90()
+    # print(pieces[i].get())
 
-pieces[5].print()
-pieces[5].flipY()
-pieces[5].print()
-pieces[5].rot90()
-pieces[5].print()
+    # print("\nflipX 1")
+    # pieces[i].flipX()
+    # print(pieces[i].get())
+
+    # print("\nrot90 2")
+    # pieces[i].rot90()
+    # print(pieces[i].get())
+
+    # print("\nrot90 3")
+    # pieces[i].rot90()
+    # print(pieces[i].get())
+
+
 
 class Board():
   matrix = []
@@ -86,20 +98,20 @@ class Board():
     return pieces.pop(r.randint(0,9))
 
 b = Board()
-b.print()
+# b.print()
 
-p = b.get_random_piece()
-p.print()
-p = b.get_random_piece()
-p.print()
+# p = b.get_random_piece()
+# p.print()
+# p = b.get_random_piece()
+# p.print()
 
-print(len(pieces))
+# print(len(pieces))
 
 def solve():
   b = Board()
-  b.print()
+#   b.print()
 
-  print(b.get())
+#   print(b.get())
 
   # TODO: find next available spot
   for i in range(8):
