@@ -36,12 +36,12 @@ class Piece():
 
 piece_defs = ["000|00-","11|1-|1-|1-", "22|2-|22", "333|3--","--4|444|4--", "-55|55-", "666|-6-|-6-", "7--|7--|777", "-8|88|8-|8-", "9999"]
 
-pieces = [Piece(i) for i in piece_defs]
+# pieces = [Piece(i) for i in piece_defs]
 
-for i in range(len(pieces)): 
-    print("\nnormal")
-    #pieces[i].print()
-    print(pieces[i].get())
+# for i in range(len(pieces)): 
+#     print("\nnormal")
+#     #pieces[i].print()
+#     print(pieces[i].get())
 
     # print("\nflipY 1")
     # pieces[i].flipY()
@@ -63,7 +63,22 @@ for i in range(len(pieces)):
     # pieces[i].rot90()
     # print(pieces[i].get())
 
+pieces = {}
 
+for i, code in enumerate(piece_defs, start=0):
+    print(code)
+    piece = Piece(code)
+    print(type(piece))
+    pieces.setdefault(i, []).append(piece)
+    pieces[i].append(piece.flipY())
+    pieces[i].append(piece.flipX())
+    print(pieces[i])
+    print(pieces[i][0].get())
+
+
+for i in range(len(pieces)): 
+    for j in range(len(pieces[i])):
+        print(pieces[i][j].get())
 
 class Board():
   matrix = []
