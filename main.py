@@ -1,5 +1,6 @@
 import numpy as np
 import random as r
+from copy import deepcopy
 
 class Piece():
   def __init__(self, code):
@@ -7,24 +8,30 @@ class Piece():
     self.create(code)
 
   def create(self, code):
+    """ 
+    Purpose: To allow easy creation of all the puzzle pieces
+
+    Input: String containing data to create a puzzle piece
+    Output: 2d array containing the layout of the puzzle piece
+    """
     # Split the piece code string into rows
     row_delimiter = "|"
     split_code = code.split(row_delimiter)
-
     # for each row, split the string and create 2d array
     for i in range(len(split_code)):
       row = split_code[i].split()
       self.piece.append(list(row[0]))
 
   def get(self):
+    """ 
+    Purpose: To allow for array transformations using numpy
+    
+    Input: self
+    Output: numpy array
+    """
     return np.array(self.piece)
 
-  def print(self):
-    for i in range(len(self.piece)):
-      for j in range(len(self.piece[0]) ):
-        print(self.piece[i][j], end=" ")
-      print("")
-
+  """numpy tranformation helpers"""
   def flipX(self):
     self.piece = np.fliplr(self.get())
 
@@ -34,56 +41,16 @@ class Piece():
   def rot90(self):
     self.piece = np.rot90(self.get())
 
-piece_defs = ["000|00-","11|1-|1-|1-", "22|2-|22", "333|3--","--4|444|4--", "-55|55-", "666|-6-|-6-", "7--|7--|777", "-8|88|8-|8-", "9999"]
-
-# pieces = [Piece(i) for i in piece_defs]
-
-# for i in range(len(pieces)): 
-#     print("\nnormal")
-#     #pieces[i].print()
-#     print(pieces[i].get())
-
-    # print("\nflipY 1")
-    # pieces[i].flipY()
-    # print(pieces[i].get())
-
-    # print("\nrot90 1")
-    # pieces[i].rot90()
-    # print(pieces[i].get())
-
-    # print("\nflipX 1")
-    # pieces[i].flipX()
-    # print(pieces[i].get())
-
-    # print("\nrot90 2")
-    # pieces[i].rot90()
-    # print(pieces[i].get())
-
-    # print("\nrot90 3")
-    # pieces[i].rot90()
-    # print(pieces[i].get())
-
-pieces = {}
-
-for i, code in enumerate(piece_defs, start=0):
-    print(code)
-    piece = Piece(code)
-    print(type(piece))
-    pieces.setdefault(i, []).append(piece)
-    pieces[i].append(piece.flipY())
-    pieces[i].append(piece.flipX())
-    print(pieces[i])
-    print(pieces[i][0].get())
-
-
-for i in range(len(pieces)): 
-    for j in range(len(pieces[i])):
-        print(pieces[i][j].get())
-
 class Board():
-  matrix = []
+  months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+  dates = [i for i in range(1, 32)]
+  days = ["Sun", "Mon", "Tues", "Wed", "Thurs", "Fri", "Sat"]
+
+  labels = months + dates + days
 
   def __init__(self):
+    self.matrix = []
+    # label_index = 0
     for i in range(8):
         row = []
         for j in range(7):
@@ -91,61 +58,137 @@ class Board():
             # first 2 rows
             if i <= 1 and not j >= 6:
                 value = "-"
+                # value = self.labels[label_index]
+                # label_index += 1
             # middle rows
             if i > 1 and not i > 6:
                 value = "-"
+                # value = self.labels[label_index]
+                # label_index += 1
             # last row
             if i == 7 and not j <= 3:
                 value = "-"
+                # value = self.labels[label_index]
+                # label_index += 1
             row.append(value)
         self.matrix.append(row)
 
   def get(self):
     return self.matrix
 
+  def set(self, matrix):
+    self.matrix = matrix
+
+  def next_location(self):
+    for i in range(8):
+      for j in range(7):
+          if self.matrix[i][j] == "-":
+            return i, j
+
   def print(self):
-    for i in range (8):
+    for i in range(8):
       for j in range(7):
           print(self.matrix[i][j], end=" ")
       print("")
 
-  def get_random_piece(self):
-    return pieces.pop(r.randint(0,9))
 
-b = Board()
-# b.print()
+class Game():
+    def __init__(self):
+      self.pieces = {}
+      self.b = Board()
+      self.generate_pieces()
 
-# p = b.get_random_piece()
-# p.print()
-# p = b.get_random_piece()
-# p.print()
+    def generate_pieces(self):
+      piece_defs = ["000|00-","11|1-|1-|1-", "22|2-|22", "333|3--","--4|444|4--", "-55|55-", "666|-6-|-6-", "7--|7--|777", "-8|88|8-|8-", "9999"]
 
-# print(len(pieces))
+      for i, code in enumerate(piece_defs, start=0):
+        piece = Piece(code)
+        self.pieces.setdefault(i, []).append(piece.get().tolist())
 
-def solve():
-  b = Board()
-#   b.print()
+        pieceFlipY = deepcopy(piece)
+        pieceFlipY.flipY()
+        if (pieceFlipY.get().tolist() not in self.pieces[i]):
+          self.pieces[i].append(pieceFlipY.get().tolist())
+  
+        pieceFlipX = deepcopy(piece)
+        pieceFlipX.flipX()
+        if (pieceFlipX.get().tolist() not in self.pieces[i]):
+          self.pieces[i].append(pieceFlipX.get().tolist())
+  
+        pieceFlipYFlipX = deepcopy(pieceFlipY)
+        pieceFlipYFlipX.flipX()
+        if (pieceFlipYFlipX.get().tolist() not in self.pieces[i]):
+            self.pieces[i].append(pieceFlipYFlipX.get().tolist())
+  
+        pieceRot90 = deepcopy(piece)
+        pieceRot90.rot90()
+        if (pieceRot90.get().tolist() not in self.pieces[i]):
+            self.pieces[i].append(pieceRot90.get().tolist())
+  
+        pieceRot90FlipY = deepcopy(pieceRot90)
+        pieceRot90FlipY.flipY()
+        if (pieceRot90FlipY.get().tolist() not in self.pieces[i]):
+            self.pieces[i].append(pieceRot90FlipY.get().tolist())
+  
+        pieceRot90FlipX = deepcopy(pieceRot90)
+        pieceRot90FlipX.flipX()
+        if (pieceRot90FlipX.get().tolist() not in self.pieces[i]):
+            self.pieces[i].append(pieceRot90FlipX.get().tolist())
+  
+        pieceRot90FlipYFlipX = deepcopy(pieceRot90FlipY)
+        pieceRot90FlipYFlipX.flipX()
+        if (pieceRot90FlipYFlipX.get().tolist() not in self.pieces[i]):
+            self.pieces[i].append(pieceRot90FlipYFlipX.get().tolist())
+  
+        # Print out the pieces
+        for k in range(len(self.pieces[i])):
+            print(np.array(self.pieces[i][k]))
+            print("\n")
+        print("-"*15,"\n")
 
-#   print(b.get())
+    def remove_piece(self, i):
+      self.pieces.pop(i)
 
-  # TODO: find next available spot
-  for i in range(8):
-        row = []
-        for j in range(7):
-            value = "X"
-            # first 2 rows
-            if i <= 1 and not j >= 6:
-                value = "-"
-            # middle rows
-            if i > 1 and not i > 6:
-                value = "-"
-            # last row
-            if i == 7 and not j <= 3:
-                value = "-"
-            row.append(value)
+    def overlay_piece(self, row, col, p):
+      matrix = deepcopy(self.b.get())
+      
+      for i in range(len(p)):
+          for j in range(len(p[0])):
+            try:
+              if matrix[row + i][col + j] == "-":
+                matrix[row + i][col + j] = int(p[i][j])
+                self.b.set(matrix)
+            except:
+              continue
 
-  # TODO: see if piece fits on board
+    def get_piece(self):
+      # get a remaining piece
+      key = r.choice(list(self.pieces.keys()))
+      return self.pieces[key]
 
-  # TODO: rotate piece if it doesn't fit
+    def place_pieces(self):
+      row, col = self.b.next_location()
+      
+      self.b.print()
+      p = self.get_piece()
+      self.overlay_piece(row, col, p[0])
+      # print(p[0])
+      # for i in range (8):
+      #   for j in range(7):
+      #     print("Trying to overlay pice at row {} and column {}".format(i,j))
+      #     self.b.overlay_piece(i, j, p)
+      #     if i == 7 and j == 6:
+      #       break
+      row, col = self.b.next_location()
+      p = self.get_piece()
+      self.overlay_piece(row, col, p[0])
 
-solve()
+
+      # p = self.pieces[(r.randint(0,9))]
+
+      # self.b.overlay_piece(0,0,p[1])
+
+      self.b.print()
+                
+g = Game()
+g.place_pieces()
