@@ -1,6 +1,7 @@
 import numpy as np
 import random as r
 from copy import deepcopy
+import itertools
 
 class Piece():
   def __init__(self, code):
@@ -95,6 +96,7 @@ class Board():
 class Game():
     def __init__(self):
       self.pieces = {}
+      self.permutations = []
       self.b = Board()
       self.generate_pieces()
 
@@ -161,6 +163,21 @@ class Game():
             except:
               continue
 
+
+    def piece_permutations(self):
+      indices = []
+      for i in self.pieces:
+        print(len(self.pieces[i]))
+        for j in range(len(self.pieces[i])):
+          indices.append([i,j])
+
+      print(indices)
+      
+      self.permutations = list(itertools.product(*indices))
+
+      print(len(self.permutations))
+
+
     def get_piece(self):
       # get a remaining piece
       key = r.choice(list(self.pieces.keys()))
@@ -170,6 +187,7 @@ class Game():
       row, col = self.b.next_location()
       
       self.b.print()
+        
       p = self.get_piece()
       self.overlay_piece(row, col, p[0])
       # print(p[0])
@@ -191,4 +209,8 @@ class Game():
       self.b.print()
                 
 g = Game()
-g.place_pieces()
+g.piece_permutations()
+
+
+
+
