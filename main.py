@@ -1,103 +1,14 @@
-import numpy as np
 import random as r
+import numpy as np
 from copy import deepcopy
 import itertools
-
-class Piece():
-  def __init__(self, code):
-    self.piece = []
-    self.create(code)
-
-  def create(self, code):
-    """ 
-    Purpose: To allow easy creation of all the puzzle pieces
-
-    Input: String containing data to create a puzzle piece
-    Output: 2d array containing the layout of the puzzle piece
-    """
-    # Split the piece code string into rows
-    row_delimiter = "|"
-    split_code = code.split(row_delimiter)
-    # for each row, split the string and create 2d array
-    for i in range(len(split_code)):
-      row = split_code[i].split()
-      self.piece.append(list(row[0]))
-
-  def get(self):
-    """ 
-    Purpose: To allow for array transformations using numpy
-    
-    Input: self
-    Output: numpy array
-    """
-    return np.array(self.piece)
-
-  """numpy tranformation helpers"""
-  def flipX(self):
-    self.piece = np.fliplr(self.get())
-
-  def flipY(self):
-    self.piece = np.flipud(self.get())
-
-  def rot90(self):
-    self.piece = np.rot90(self.get())
-
-class Board():
-  months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
-  dates = [i for i in range(1, 32)]
-  days = ["Sun", "Mon", "Tues", "Wed", "Thurs", "Fri", "Sat"]
-
-  labels = months + dates + days
-
-  def __init__(self):
-    self.matrix = []
-    # label_index = 0
-    for i in range(8):
-        row = []
-        for j in range(7):
-            value = "X"
-            # first 2 rows
-            if i <= 1 and not j >= 6:
-                value = "-"
-                # value = self.labels[label_index]
-                # label_index += 1
-            # middle rows
-            if i > 1 and not i > 6:
-                value = "-"
-                # value = self.labels[label_index]
-                # label_index += 1
-            # last row
-            if i == 7 and not j <= 3:
-                value = "-"
-                # value = self.labels[label_index]
-                # label_index += 1
-            row.append(value)
-        self.matrix.append(row)
-
-  def get(self):
-    return self.matrix
-
-  def set(self, matrix):
-    self.matrix = matrix
-
-  def next_location(self):
-    for i in range(8):
-      for j in range(7):
-          if self.matrix[i][j] == "-":
-            return i, j
-
-  def print(self):
-    for i in range(8):
-      for j in range(7):
-          print(self.matrix[i][j], end=" ")
-      print("")
-
+from piece import Piece
+from board import Board
 
 class Game():
+
     def __init__(self):
       self.pieces = {}
-      self.permutations = []
-      self.b = Board()
       self.generate_pieces()
 
     def generate_pieces(self):
@@ -143,10 +54,10 @@ class Game():
             self.pieces[i].append(pieceRot90FlipYFlipX.get().tolist())
   
         # Print out the pieces
-        for k in range(len(self.pieces[i])):
-            print(np.array(self.pieces[i][k]))
-            print("\n")
-        print("-"*15,"\n")
+        # for k in range(len(self.pieces[i])):
+        #     print(np.array(self.pieces[i][k]))
+        #     print("\n")
+        # print("-"*15,"\n")
 
     def remove_piece(self, i):
       self.pieces.pop(i)
@@ -157,60 +68,74 @@ class Game():
       for i in range(len(p)):
           for j in range(len(p[0])):
             try:
-              if matrix[row + i][col + j] == "-":
-                matrix[row + i][col + j] = int(p[i][j])
-                self.b.set(matrix)
-            except:
-              continue
+              if (row + i) < len(matrix) and (col + j) < len(matrix[0]): # make sure the matrix index is in-bounds
+                if isinstance(matrix[row + i][col + j] , int) and not p[i][j] == "-":
+                  return
+                if  matrix[row + i][col + j] == "X":
+                  return
+                if matrix[row + i][col + j] == "D" and p[i][j] == "-":
+                  continue
+                if matrix[row + i][col + j] == "D" and not p[i][j] == "-":
+                  return
+                if not matrix[row + i][col + j] == "X" and not p[i][j] == "-":
+                  matrix[row + i][col + j] = int(p[i][j])
+                elif isinstance(matrix[row + i][col + j] , int) and p[i][j] == "-":
+                  continue
+              else:
+                  return
+            except IndexError:
+              return
+      self.b.set(matrix)
+      return True
 
+    def get_order(self) -> list:
+      return list(itertools.permutations([0,1,2,3,4,5,6,7,8,9],10))
 
-    def piece_permutations(self):
-      indices = []
+    def get_rotation(self) -> list:
+      indices = {}
       for i in self.pieces:
-        print(len(self.pieces[i]))
         for j in range(len(self.pieces[i])):
-          indices.append([i,j])
+          indices.setdefault(i, []).append(j)
+      return list(itertools.product(*indices.values()))
 
-      print(indices)
-      
-      self.permutations = list(itertools.product(*indices))
-
-      print(len(self.permutations))
-
-
-    def get_piece(self):
-      # get a remaining piece
-      key = r.choice(list(self.pieces.keys()))
-      return self.pieces[key]
+    def get_piece(self, key, rotation):
+      return self.pieces[key][rotation]
 
     def place_pieces(self):
-      row, col = self.b.next_location()
-      
-      self.b.print()
-        
-      p = self.get_piece()
-      self.overlay_piece(row, col, p[0])
-      # print(p[0])
-      # for i in range (8):
-      #   for j in range(7):
-      #     print("Trying to overlay pice at row {} and column {}".format(i,j))
-      #     self.b.overlay_piece(i, j, p)
-      #     if i == 7 and j == 6:
-      #       break
-      row, col = self.b.next_location()
-      p = self.get_piece()
-      self.overlay_piece(row, col, p[0])
+      order = self.get_order()
+      rotation = self.get_rotation()
 
-
-      # p = self.pieces[(r.randint(0,9))]
-
-      # self.b.overlay_piece(0,0,p[1])
-
-      self.b.print()
+      while True:
+        for i in reversed(order): # i is a tuple of the order of pieces. order is length 3628800
+          for j in rotation: # tuple of the rotation pieces. rotation is length 8388608
+            self.b = Board()
+            order, rotation = list(i), list(j)
+            #print(order, rotation)
+            
+            for index, key in enumerate(order):
+              self.b.find_remaining()
+              self.b.print()
+              while True:
+                try: 
+                  location = self.b.next_location()
+                except:
+                  break
+                #print(o)
+                piece = self.get_piece(order[index], rotation[key])
+              
+                #print(np.array(piece))
                 
+                result = self.overlay_piece(location[0], location[1], piece)
+                if result:
+                  self.pieces.pop(i, None)
+                  break
+                if len(self.pieces) == 0:
+                  print("Filled the board!")
+                  self.b.print()
+                  return
+            
+
+          self.b.print()
+   
 g = Game()
-g.piece_permutations()
-
-
-
-
+g.place_pieces()
