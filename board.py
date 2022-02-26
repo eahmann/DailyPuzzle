@@ -44,7 +44,7 @@ class Board():
   def find_remaining(self):
     for i in range(8):
       for j in range(7):
-          if self.matrix[i][j] == "-":
+          if self.matrix[i][j] == "-" or self.matrix[i][j] == "D":
             self.remaining_locations.append([i, j])
 
   def next_location(self):
