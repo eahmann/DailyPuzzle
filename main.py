@@ -67,23 +67,32 @@ class Game():
       
       for i in range(len(p)):
           for j in range(len(p[0])):
-            try:
-              if (row + i) < len(matrix) and (col + j) < len(matrix[0]): # make sure the matrix index is in-bounds
-                if isinstance(matrix[row + i][col + j] , int) and not p[i][j] == "-":
-                  return
-                if  matrix[row + i][col + j] == "X":
-                  return
-                if matrix[row + i][col + j] == "D" and p[i][j] == "-":
-                  continue
-                if matrix[row + i][col + j] == "D" and not p[i][j] == "-":
-                  return
-                if not matrix[row + i][col + j] == "X" and not p[i][j] == "-":
-                  matrix[row + i][col + j] = int(p[i][j])
-                elif isinstance(matrix[row + i][col + j] , int) and p[i][j] == "-":
-                  continue
+            try: # this should catch invalid matrix locations (ie.. placing a piece too close to the edge)
+              if p[i][j] == "-":
+                continue
               else:
+                if matrix[row + i][col + j] == "X":
                   return
-            except IndexError:
+                elif matrix[row + i][col + j] == "D":
+                  return
+                elif isinstance(matrix[row + i][col + j] , int):
+                  return
+                else: matrix[row + i][col + j] = int(p[i][j])
+
+
+
+
+              # if isinstance(matrix[row + i][col + j] , int) and not p[i][j] == "-": # matrix AND piece locations is int -> return
+              #   return
+              # if matrix[row + i][col + j] == "X" and not p[i][j] == "-": # Don't place a piece on the X's
+              #   return
+              # if not matrix[row + i][col + j] == "X" and not p[i][j] == "-":
+              #   matrix[row + i][col + j] = int(p[i][j])
+              # elif isinstance(matrix[row + i][col + j] , int) and p[i][j] == "-":
+              #   continue
+              # elif matrix[row + i][col + j] == "D" and p[i][j] == "-":
+              #   continue
+            except:
               return
       self.b.set(matrix)
       return True
@@ -114,6 +123,7 @@ class Game():
             
             for index, key in enumerate(order):
               self.b.find_remaining()
+              print("Trying piece {}".format(key), file=open('output.txt', 'a'))
               self.b.print()
               while True:
                 try: 
@@ -130,7 +140,7 @@ class Game():
                   self.pieces.pop(i, None)
                   break
                 if len(self.pieces) == 0:
-                  print("Filled the board!")
+                  print("Filled the board!", file=open('output.txt', 'a'))
                   self.b.print()
                   return
             
