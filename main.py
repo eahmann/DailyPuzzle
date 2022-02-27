@@ -9,7 +9,9 @@ class Game():
 
     def __init__(self):
       self.pieces = {}
+      self.piece_order_permutations = list(itertools.permutations([0,1,2,3,4,5,6,7,8,9],10))
       self.generate_pieces()
+      self.order_rotations = self.generate_order_rotations()
 
     def generate_pieces(self):
       piece_defs = ["000|00-","11|1-|1-|1-", "22|2-|22", "333|3--","--4|444|4--", "-55|55-", "666|-6-|-6-", "7--|7--|777", "-8|88|8-|8-", "9999"]
@@ -72,35 +74,21 @@ class Game():
                 continue
               else:
                 if matrix[row + i][col + j] == "X":
-                  return
+                  return False
                 elif matrix[row + i][col + j] == "D":
-                  return
+                  return False
                 elif isinstance(matrix[row + i][col + j] , int):
-                  return
+                  return False
                 else: matrix[row + i][col + j] = int(p[i][j])
-
-
-
-
-              # if isinstance(matrix[row + i][col + j] , int) and not p[i][j] == "-": # matrix AND piece locations is int -> return
-              #   return
-              # if matrix[row + i][col + j] == "X" and not p[i][j] == "-": # Don't place a piece on the X's
-              #   return
-              # if not matrix[row + i][col + j] == "X" and not p[i][j] == "-":
-              #   matrix[row + i][col + j] = int(p[i][j])
-              # elif isinstance(matrix[row + i][col + j] , int) and p[i][j] == "-":
-              #   continue
-              # elif matrix[row + i][col + j] == "D" and p[i][j] == "-":
-              #   continue
             except:
               return
       self.b.set(matrix)
       return True
 
     def get_order(self) -> list:
-      return list(itertools.permutations([0,1,2,3,4,5,6,7,8,9],10))
+      return list(self.piece_order_permutations.pop())
 
-    def get_rotation(self) -> list:
+    def generate_order_rotations(self) -> list:
       indices = {}
       for i in self.pieces:
         for j in range(len(self.pieces[i])):
@@ -110,42 +98,33 @@ class Game():
     def get_piece(self, key, rotation):
       return self.pieces[key][rotation]
 
-    def place_pieces(self):
+
+    def place_pieces(self, runs = 1):
+      print("Begin place pieces for order {}".format(runs))
       order = self.get_order()
-      rotation = self.get_rotation()
+      rotations = self.order_rotations
+      self.b = Board()
 
-      while True:
-        for i in reversed(order): # i is a tuple of the order of pieces. order is length 3628800
-          for j in rotation: # tuple of the rotation pieces. rotation is length 8388608
-            self.b = Board()
-            order, rotation = list(i), list(j)
-            #print(order, rotation)
-            
-            for index, key in enumerate(order):
-              self.b.find_remaining()
-              print("Trying piece {}".format(key), file=open('output.txt', 'a'))
-              self.b.print()
-              while True:
-                try: 
-                  location = self.b.next_location()
-                except:
-                  break
-                #print(o)
-                piece = self.get_piece(order[index], rotation[key])
-              
-                #print(np.array(piece))
-                
-                result = self.overlay_piece(location[0], location[1], piece)
-                if result:
-                  self.pieces.pop(i, None)
-                  break
-                if len(self.pieces) == 0:
-                  print("Filled the board!", file=open('output.txt', 'a'))
-                  self.b.print()
-                  return
-            
-
+      #print("order: ", order)
+      for j in rotations: # j is a list
+        for i in order: # i is an int
+          self.b.find_remaining()
+          piece = self.get_piece(i, j[i])
+          placed = False
+          while not placed:
+            try: 
+                location = self.b.next_location()
+            except:
+              break
+            placed = self.overlay_piece(location[0], location[1], piece)
           self.b.print()
+          #print(np.array(piece))
+
+      self.place_pieces(runs + 1)
+
+            
+
+      
    
 g = Game()
 g.place_pieces()
