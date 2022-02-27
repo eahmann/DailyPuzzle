@@ -86,7 +86,7 @@ class Game():
       return True
 
     def get_order(self) -> list:
-      return list(self.piece_order_permutations.pop())
+      return list(self.piece_order_permutations.pop(0))
 
     def generate_order_rotations(self) -> list:
       indices = {}
@@ -100,13 +100,16 @@ class Game():
 
 
     def place_pieces(self, runs = 1):
-      print("Begin place pieces for order {}".format(runs))
       order = self.get_order()
+      print("Run #{} for order {}".format(runs, order), file=open('output.txt', 'a'))
       rotations = self.order_rotations
-      self.b = Board()
+      
 
       #print("order: ", order)
       for j in rotations: # j is a list
+        # print("With piece rotation {}".format(j), file=open('output.txt', 'a'))
+        self.b = Board()
+        remaining = deepcopy(order)
         for i in order: # i is an int
           self.b.find_remaining()
           piece = self.get_piece(i, j[i])
@@ -117,7 +120,11 @@ class Game():
             except:
               break
             placed = self.overlay_piece(location[0], location[1], piece)
-          self.b.print()
+          if (placed):
+            remaining.pop(remaining.index(i))
+          if len(remaining) == 0:
+            print("Winner! With piece order {} and rotation {}".format(j, order), file=open('output.txt', 'a'))
+            self.b.print()
           #print(np.array(piece))
 
       self.place_pieces(runs + 1)
