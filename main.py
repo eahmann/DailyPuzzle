@@ -86,7 +86,7 @@ class Game():
       return True
 
     def get_order(self) -> list:
-      return list(self.piece_order_permutations.pop(0))
+      return list(self.piece_order_permutations.pop())
 
     def generate_order_rotations(self) -> list:
       indices = {}
@@ -101,7 +101,8 @@ class Game():
 
     def place_pieces(self, runs = 1):
       order = self.get_order()
-      print("Run #{} for order {}".format(runs, order), file=open('output.txt', 'a'))
+      
+      print("Call #{} with order {}".format(runs, order), file=open('output.txt', 'a'))
       rotations = self.order_rotations
       
 
@@ -127,11 +128,7 @@ class Game():
             self.b.print()
           #print(np.array(piece))
 
-      self.place_pieces(runs + 1)
+      self.place_pieces(runs + 1)          
 
-            
-
-      
-   
 g = Game()
 g.place_pieces()
