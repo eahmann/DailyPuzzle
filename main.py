@@ -6,10 +6,9 @@ from piece import Piece
 from board import Board
 
 class Game():
-
-    def __init__(self):
+    def __init__(self, order):
       self.pieces = {}
-      self.piece_order_permutations = list(itertools.permutations([0,1,2,3,4,5,6,7,8,9],10))
+      self.order = order
       self.generate_pieces()
       self.order_rotations = self.generate_order_rotations()
 
@@ -100,9 +99,7 @@ class Game():
 
 
     def place_pieces(self, runs = 1):
-      order = self.get_order()
-
-      print("Call #{} with order {}".format(runs, order), file=open('output.txt', 'a'))
+      print("Call #{} with order {}".format(runs, self.order), file=open('output.txt', 'a'))
       rotations = self.order_rotations
       
 
@@ -110,8 +107,8 @@ class Game():
       for j in rotations: # j is a list
         # print("With piece rotation {}".format(j), file=open('output.txt', 'a'))
         self.b = Board()
-        remaining = deepcopy(order)
-        for i in order: # i is an int
+        remaining = deepcopy(self.order)
+        for i in self.order: # i is an int
           self.b.find_remaining()
           piece = self.get_piece(i, j[i])
           placed = False
@@ -122,13 +119,31 @@ class Game():
               break
             placed = self.overlay_piece(location[0], location[1], piece)
           if (placed):
+            self.b.print()
+            #self.b.detect_bad_state()
             remaining.pop(remaining.index(i))
           if len(remaining) == 0:
-            print("Winner! With piece order {} and rotation {}".format(j, order), file=open('output.txt', 'a'))
+            print("Winner! With piece order {} and rotation {}".format(j, self.order), file=open('output.txt', 'a'))
             self.b.print()
           #print(np.array(piece))
 
-      self.place_pieces(runs + 1)          
+      self.place_pieces(runs + 1)         
 
-g = Game()
-g.place_pieces()
+
+
+
+if __name__ == "__main__":
+  piece_order_permutations = list(itertools.permutations([0,1,2,3,4,5,6,7,8,9],10))
+
+  def get_order() -> list:
+    return list(piece_order_permutations.pop(r.randrange(0, len(piece_order_permutations))))
+    #return list(piece_order_permutations.pop())
+
+  def do_game():
+    g = Game(get_order())
+    g.place_pieces()
+
+  while piece_order_permutations:
+    do_game()
+
+

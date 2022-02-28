@@ -42,10 +42,24 @@ class Board():
     self.matrix = matrix
 
   def find_remaining(self):
+    self.remaining_locations = []
+    for i in range(0, 8):
+      for j in range(0, 7):
+          if self.matrix[i][j] == "-":
+            self.remaining_locations.append([i, j])
+          if self.matrix[i][j] == "D":
+            self.remaining_locations.append([i, j])
+
+  def detect_bad_state(self):
     for i in range(8):
       for j in range(7):
-          if self.matrix[i][j] == "-" or self.matrix[i][j] == "D":
-            self.remaining_locations.append([i, j])
+        if i == 0:
+          # check 1x1 blocked off location
+          if self.matrix[i][j] == "-" and \
+           (isinstance(self.matrix[i][j + 1], int) or self.matrix[i][j + 1] == "D") and \
+             (isinstance(self.matrix[i + 1][j], int) or self.matrix[i + 1][j] == "D"):
+            print("Found an issue")
+
 
   def next_location(self):
     return self.remaining_locations.pop(0)
