@@ -120,7 +120,7 @@ class Game():
             placed = self.overlay_piece(location[0], location[1], piece)
           if (placed):
             self.b.print()
-            #self.b.detect_bad_state()
+            self.b.mark_filled()
             remaining.pop(remaining.index(i))
           if len(remaining) == 0:
             print("Winner! With piece order {} and rotation {}".format(j, self.order), file=open('output.txt', 'a'))
@@ -145,5 +145,4 @@ if __name__ == "__main__":
 
   while piece_order_permutations:
     do_game()
-
 

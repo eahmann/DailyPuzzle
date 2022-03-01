@@ -1,3 +1,6 @@
+from xmlrpc.client import boolean
+from copy import deepcopy
+
 class Board():
   months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
   dates = [i for i in range(1, 32)]
@@ -50,15 +53,31 @@ class Board():
           if self.matrix[i][j] == "D":
             self.remaining_locations.append([i, j])
 
-  def detect_bad_state(self):
+  def is_isolated(self, copy) -> boolean:
+    pass
+
+
+  def mark_filled(self):
+    copy = deepcopy(self.matrix)
     for i in range(8):
       for j in range(7):
-        if i == 0:
-          # check 1x1 blocked off location
-          if self.matrix[i][j] == "-" and \
-           (isinstance(self.matrix[i][j + 1], int) or self.matrix[i][j + 1] == "D") and \
-             (isinstance(self.matrix[i + 1][j], int) or self.matrix[i + 1][j] == "D"):
-            print("Found an issue")
+        if isinstance(copy[i][j], int) or copy[i][j] == "D":
+          copy[i][j] = "X"
+
+    for i in range(8):
+      for j in range(7):
+          print(copy[i][j], end=" ")
+      print("")
+    print("\n")
+
+    for i in range(1,8): #row
+      for j in range(0,7): #cols
+        if (j + 1) < 7:
+          if copy[i][j] == "X" and copy[i][j + 1] == "X" and copy[i - 1][j + 1] == "X":
+            if copy[i - 1][j] == "-":
+              print("Found a void at {}:{}".format(i-1,j))
+
+          
 
 
   def next_location(self):
