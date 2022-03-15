@@ -32,9 +32,9 @@ class Board():
                 # label_index += 1
             row.append(value)
         self.matrix.append(row)
-    # self.matrix[0][1] = "D"
-    # self.matrix[5][3] = "D"
-    # self.matrix[7][5] = "D"
+    self.matrix[0][2] = "D"
+    self.matrix[4][0] = "D"
+    self.matrix[6][5] = "D"
     #self.print()
 
 
@@ -75,10 +75,15 @@ class Board():
             except:
               return
 
-      # Add function to check for void state and return boolean
-
       self.set(matrix)
       return True
+      # if self.is_solvable():
+      #   self.set(matrix)
+      #   return True 
+      # else:
+      #   return False
+
+
 
   def find_remaining(self):
     self.remaining_locations = []
@@ -90,29 +95,30 @@ class Board():
           # if self.matrix[i][j] == "D":
           #   self.remaining_locations.append([i, j])
 
-  def is_isolated(self, copy) -> boolean:
-    pass
-
-
-  def mark_filled(self):
-    copy = deepcopy(self.matrix)
+  def is_solvable(self):
+    matrix = deepcopy(self.matrix)
     for i in range(8):
       for j in range(7):
-        if isinstance(copy[i][j], int) or copy[i][j] == "D":
-          copy[i][j] = "X"
+        if isinstance(matrix[i][j], int) or matrix[i][j] == "D":
+          matrix[i][j] = "X"
 
-    for i in range(8):
-      for j in range(7):
-          print(copy[i][j], end=" ")
-      print("")
-    print("\n")
+    # for i in range(8):
+    #   for j in range(7):
+    #       print(matrix[i][j], end=" ")
+    #   print("")
+    # print("\n")
 
-    for i in range(1,8): #row
-      for j in range(0,7): #cols
-        if (j + 1) < 7:
-          if copy[i][j] == "X" and copy[i][j + 1] == "X" and copy[i - 1][j + 1] == "X":
-            if copy[i - 1][j] == "-":
-              print("Found a void at {}:{}".format(i-1,j))
+    size = 0
+    for i in range(8): #row
+      for j in range(7): #cols
+        if matrix[i][j] == "-":
+          size += 1
+          try: 
+            if matrix[i - 1][j] == "-":
+              size += 1
+          except IndexError:
+            pass
+    return True
 
           
 
@@ -125,4 +131,4 @@ class Board():
       for j in range(7):
           print(self.matrix[i][j], end=" ")
       print("")
-    print("\n")
+    #print("\n")
