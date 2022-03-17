@@ -89,7 +89,7 @@ class Game():
     def solver(self):
       self.next_order()
 
-      #self.order = [5,7,4,1,9,0,3,8,6,2]
+      print(self.order, file=open('output.txt', 'a'))
       self.init_state()
 
       #self.state = [[5, 3, 3], [7, 3, 3], [4, 3, 3], [1, 7, 7], [9, 1, 1], [0, 6, 7], [3, 5, 7], [8, 5, 7], [6, 0, 3], [2, 0, 3]]
