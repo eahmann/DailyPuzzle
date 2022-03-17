@@ -19,26 +19,18 @@ class Game():
       # index of the current piece
       self.position = 0
 
-
-      self.state = {}
-
       # Contains a list of 2d list for maintaining the state of the game
       # [[{piece number}, {current rotation (0..n)}, {max rotation (n)}]]
-      self.new_state = []
+      self.state = []
       
 
     def next_order(self) -> list:
       self.order = list(self.order_permutations.pop(r.randrange(0, len(self.order_permutations))))
 
     def init_state(self):
+      self.state = []
       for i in self.order:
-        self.state[i] = {'cur': 0, 'max': len(self.pieces[i]) - 1}
-      #print(self.state)
-
-    def init_new_state(self):
-      self.new_state = []
-      for i in self.order:
-        self.new_state.append([i, 0, len(self.pieces[i]) - 1])
+        self.state.append([i, 0, len(self.pieces[i]) - 1])
       
 
     def generate_pieces(self):
@@ -96,9 +88,15 @@ class Game():
 
     def solver(self):
       self.next_order()
-      self.init_new_state()
+
+      #self.order = [5,7,4,1,9,0,3,8,6,2]
+      self.init_state()
+
+      #self.state = [[5, 3, 3], [7, 3, 3], [4, 3, 3], [1, 7, 7], [9, 1, 1], [0, 6, 7], [3, 5, 7], [8, 5, 7], [6, 0, 3], [2, 0, 3]]
 
       index = 0
+
+      
 
       # Initialize with a blank board
       if index == 0:
@@ -106,46 +104,50 @@ class Game():
         self.stack.append(Board())
 
 
-      while self.new_state[0][1] <= self.new_state[0][2]:
+      while index > -1:
         # Get the latest board from the stack
         b = deepcopy(self.stack[-1])
 
-        # print("\n state:",self.new_state)
+        # print("\n state:",self.state)
         # b.print()
 
-        piece = self.get_piece(self.new_state[index][0], self.new_state[index][1])
+        piece = self.get_piece(self.state[index][0], self.state[index][1])
         placed = b.place_piece(piece)
 
         if placed: # move to the next piece in the order and addd the board to stack
-          index += 1
-          self.stack.append(b)
+          if b.is_solvable():
+            index += 1
+            self.stack.append(b)
+          else:
+            placed = False
 
-        if index > len(self.order) - 1:
-          print("\n state:",self.new_state)
+        if index == len(self.order):
+          print("\nWinner!",self.state)
           b.print()
+          index -= 1
 
           index = self.move_index(index)
-          self.new_state[index][1] += 1
+          self.state[index][1] += 1
 
         if not placed: # try the next rotation
-          self.new_state[index][1] += 1
+          self.state[index][1] += 1
 
-        if not placed and self.new_state[index][1] > self.new_state[index][2]: # backtrack
+        if not placed and self.state[index][1] > self.state[index][2]: # backtrack
           index = self.move_index(index)
-          self.new_state[index][1] += 1
+          self.state[index][1] += 1
 
       self.solver()
 
     def move_index(self, index):
       # move the index to where the current rotation is not yet max
-      while self.new_state[index][1] >= self.new_state[index][2]:
+      while self.state[index][1] >= self.state[index][2]:
         index -= 1
         # print(index)
         self.stack.pop()
 
       # reset state
       for i in range(index + 1, len(self.order)):
-        self.new_state[i][1] = 0
+        self.state[i][1] = 0
 
       return index
 

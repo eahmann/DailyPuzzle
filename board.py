@@ -33,8 +33,8 @@ class Board():
             row.append(value)
         self.matrix.append(row)
     self.matrix[0][2] = "D"
-    self.matrix[4][0] = "D"
-    self.matrix[6][5] = "D"
+    self.matrix[4][2] = "D"
+    self.matrix[7][4] = "D"
     #self.print()
 
 
@@ -49,10 +49,10 @@ class Board():
     placed = False
     while not placed:
       try: 
-          location = self.next_location()
+          loc = self.next_location()
       except:
         break
-      placed = self.overlay_piece(location[0], location[1], piece)
+      placed = self.overlay_piece(loc[0], loc[1], piece)
     return placed
 
   def overlay_piece(self, row: int, col: int, p):
@@ -77,7 +77,7 @@ class Board():
 
       self.set(matrix)
       return True
-      # if self.is_solvable():
+      # if self.is_solvable() == True:
       #   self.set(matrix)
       #   return True 
       # else:
@@ -97,30 +97,39 @@ class Board():
 
   def is_solvable(self):
     matrix = deepcopy(self.matrix)
+    # Mask all the filled pieces
     for i in range(8):
       for j in range(7):
         if isinstance(matrix[i][j], int) or matrix[i][j] == "D":
           matrix[i][j] = "X"
 
-    # for i in range(8):
-    #   for j in range(7):
-    #       print(matrix[i][j], end=" ")
-    #   print("")
-    # print("\n")
-
-    size = 0
-    for i in range(8): #row
-      for j in range(7): #cols
-        if matrix[i][j] == "-":
-          size += 1
-          try: 
-            if matrix[i - 1][j] == "-":
-              size += 1
-          except IndexError:
-            pass
+    for i in range(8):
+      for j in range(7):
+        # check the corner
+        if i == 0:
+          if j == 0:
+            if matrix[i][j] == "-" and matrix[i + 1][j] == "X" and matrix[i][j + 1] == "X":
+              return False
+          if matrix[i][j] == "-" and matrix[i + 1][j] == "X" and matrix[i - 1][j] == "X" and matrix[i][j + 1] == "X":
+            return False
     return True
 
+
           
+
+  def IsIsolated(self, matrix, row, col):
+    # check the corner
+    if row == 0:
+      if col == 0:
+        if matrix[row][col] == "-" and matrix[row + 1][col] == "X" and matrix[row][col + 1] == "X":
+          return True
+      # check the rest of top row
+      if matrix[row][col] == "-" and matrix[row + 1][col] == "X" and matrix[row - 1][col] == "X" and matrix[row][col + 1] == "X":
+          return True
+    # if row > 0 and row < len(matrix[0]):
+    #     if matrix[row][col] == "-" and matrix[row + 1][col] == "X" and matrix[row][col + 1] == "X":
+    #       return True
+
 
 
   def next_location(self):
@@ -129,6 +138,6 @@ class Board():
   def print(self):
     for i in range(8):
       for j in range(7):
-          print(self.matrix[i][j], end=" ")
-      print("")
+          print(self.matrix[i][j], end=" ", file=open('output.txt', 'a'))
+      print("", file=open('output.txt', 'a'))
     #print("\n")
