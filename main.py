@@ -8,28 +8,20 @@ from board import Board
 class Game():
     def __init__(self):
       self.pieces = {}
-      self.order_permutations = list(itertools.permutations([0,1,2,3,4,5,6,7,8,9],10))
       self.generate_pieces()
+      self.order_permutations = list(itertools.permutations([i for i in range(len(self.pieces))],len(self.pieces)))
       self.stack = []
-
-      # order of the pieces
-      self.order = []
-      
-
-      # index of the current piece
-      self.position = 0
-
       # Contains a list of 2d list for maintaining the state of the game
       # [[{piece number}, {current rotation (0..n)}, {max rotation (n)}]]
       self.state = []
       
 
-    def next_order(self) -> list:
-      self.order = list(self.order_permutations.pop(r.randrange(0, len(self.order_permutations))))
+    def get_order(self) -> list:
+      return list(self.order_permutations.pop(r.randrange(0, len(self.order_permutations))))
 
-    def init_state(self):
+    def do_next(self):
       self.state = []
-      for i in self.order:
+      for i in self.get_order():
         self.state.append([i, 0, len(self.pieces[i]) - 1])
       
 
@@ -87,42 +79,37 @@ class Game():
 
 
     def solver(self):
-      self.next_order()
+      self.do_next()
 
-      print(self.order, file=open('output.txt', 'a'))
-      self.init_state()
+      # hotwire game
+      #self.state = [[5, 3, 3], [7, 3, 3], [4, 3, 3], [1, 3, 7], [9, 1, 1], [0, 6, 7], [3, 5, 7], [8, 5, 7], [6, 0, 3], [2, 0, 3]]
+      print(self.state, file=open('output.txt', 'a'))
 
-      #self.state = [[5, 3, 3], [7, 3, 3], [4, 3, 3], [1, 7, 7], [9, 1, 1], [0, 6, 7], [3, 5, 7], [8, 5, 7], [6, 0, 3], [2, 0, 3]]
 
       index = 0
-
-      
-
-      # Initialize with a blank board
-      if index == 0:
-        self.stack = []
-        self.stack.append(Board())
+      self.stack = []
+      self.stack.append(Board())
 
 
       while index > -1:
         # Get the latest board from the stack
         b = deepcopy(self.stack[-1])
 
-        # print("\n state:",self.state)
-        # b.print()
+        #print("\nstate:",self.state)
+        #b.print()
 
         piece = self.get_piece(self.state[index][0], self.state[index][1])
         placed = b.place_piece(piece)
 
-        if placed: # move to the next piece in the order and addd the board to stack
+        if placed: # move (index) to the next piece in the order and addd the board to stack
           if b.is_solvable():
             index += 1
             self.stack.append(b)
           else:
             placed = False
 
-        if index == len(self.order):
-          print("\nWinner!",self.state)
+        if index == len(self.state):
+          print("\nWinner!",self.state, file=open('output.txt', 'a'))
           b.print()
           index -= 1
 
@@ -146,7 +133,7 @@ class Game():
         self.stack.pop()
 
       # reset state
-      for i in range(index + 1, len(self.order)):
+      for i in range(index + 1, len(self.state)):
         self.state[i][1] = 0
 
       return index
