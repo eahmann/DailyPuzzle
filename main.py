@@ -14,6 +14,7 @@ class Game():
       # Contains a list of 2d list for maintaining the state of the game
       # [[{piece number}, {current rotation (0..n)}, {max rotation (n)}]]
       self.state = []
+      self.solutions = 0
       
 
     def get_order(self) -> list:
@@ -79,51 +80,53 @@ class Game():
 
 
     def solver(self):
-      self.do_next()
+      while self.order_permutations:
+        self.do_next()
 
-      # hotwire game
-      #self.state = [[5, 3, 3], [7, 3, 3], [4, 3, 3], [1, 3, 7], [9, 1, 1], [0, 6, 7], [3, 5, 7], [8, 5, 7], [6, 0, 3], [2, 0, 3]]
-      print(self.state, file=open('output.txt', 'a'))
-
-
-      index = 0
-      self.stack = []
-      self.stack.append(Board())
+        # hotwire game
+        #self.state = [[5, 3, 3], [7, 3, 3], [4, 3, 3], [1, 3, 7], [9, 1, 1], [0, 6, 7], [3, 5, 7], [8, 5, 7], [6, 0, 3], [2, 0, 3]]
+        print("Start:", self.state, file=open('output.txt', 'a'))
 
 
-      while index > -1:
-        # Get the latest board from the stack
-        b = deepcopy(self.stack[-1])
+        index = 0
+        self.stack = []
+        self.stack.append(Board(2022, 3, 20))
 
-        #print("\nstate:",self.state)
-        #b.print()
 
-        piece = self.get_piece(self.state[index][0], self.state[index][1])
-        placed = b.place_piece(piece)
+        while index > -1:
+          # Get the latest board from the stack
+          b = deepcopy(self.stack[-1])
 
-        if placed: # move (index) to the next piece in the order and addd the board to stack
-          if b.is_solvable():
-            index += 1
-            self.stack.append(b)
-          else:
-            placed = False
+          #print("\nstate:",self.state)
+          #b.print()
 
-        if index == len(self.state):
-          print("\nWinner!",self.state, file=open('output.txt', 'a'))
-          b.print()
-          index -= 1
+          piece = self.get_piece(self.state[index][0], self.state[index][1])
+          placed = b.place_piece(piece)
 
-          index = self.move_index(index)
-          self.state[index][1] += 1
+          if placed: # move (index) to the next piece in the order and addd the board to stack
+            if b.is_solvable():
+              index += 1
+              self.stack.append(b)
+            else:
+              placed = False
 
-        if not placed: # try the next rotation
-          self.state[index][1] += 1
+          if index == len(self.state):
+            self.solutions += 1
+            print("Solution #{}".format(self.solutions), self.state, file=open('output.txt', 'a'))
+            b.print()
+            index -= 1
 
-        if not placed and self.state[index][1] > self.state[index][2]: # backtrack
-          index = self.move_index(index)
-          self.state[index][1] += 1
+            index = self.move_index(index)
+            self.state[index][1] += 1
 
-      self.solver()
+          if not placed: # try the next rotation
+            self.state[index][1] += 1
+
+          if not placed and self.state[index][1] > self.state[index][2]: # backtrack
+            index = self.move_index(index)
+            self.state[index][1] += 1
+
+      
 
     def move_index(self, index):
       # move the index to where the current rotation is not yet max

@@ -1,44 +1,52 @@
 from copy import deepcopy
 import numpy as np
-
+import datetime
 
 class Board():
   
-  # months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
-  # dates = [i for i in range(1, 32)]
-  # days = ["Sun", "Mon", "Tues", "Wed", "Thurs", "Fri", "Sat"]
-  # labels = months + dates + days
+  months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+  dates = [str(i) for i in range(1, 32)]
+  days = ["Sun", "Mon", "Tues", "Wed", "Thurs", "Fri", "Sat"]
+  labels = months + dates + days
 
-  def __init__(self):
-    self.remaining_locations = []
-    self.matrix = []
-    self.matrix2 = []
-    # label_index = 0
+  dt_days = ["Mon", "Tues", "Wed", "Thurs", "Fri", "Sat", "Sun"]
+
+  def __init__(self, year, month, day):
+    self.weekday = self.dt_days[datetime.date(year,month,day).weekday()]
+    self.month = self.months[month - 1]
+    self.day = day
+    self.date = [self.weekday, self.month, str(self.day)]
+
+    self.matrix = [] # 2d array for main game
+    self.matrix_labeled = [] # labeled 2d array for blocking given year, month, day 
+    self.matrix_colored = []
+    label_index = 0
     for i in range(8):
         row = []
+        row_labeled = []
         for j in range(7):
-            value = "X"
+            value = label = "X"
             # first 2 rows
             if i <= 1 and not j >= 6:
                 value = "-"
-                # value = self.labels[label_index]
-                # label_index += 1
+                label = self.labels[label_index]
+                label_index += 1
             # middle rows
             if i > 1 and not i > 6:
                 value = "-"
-                # value = self.labels[label_index]
-                # label_index += 1
+                label = self.labels[label_index]
+                label_index += 1
             # last row
             if i == 7 and not j <= 3:
                 value = "-"
-                # value = self.labels[label_index]
-                # label_index += 1
+                label = self.labels[label_index]
+                label_index += 1
+            if label in self.date:
+                value = "D"
             row.append(value)
+            row_labeled.append(label.center(4))
         self.matrix.append(row)
-    self.matrix[0][2] = "D"
-    self.matrix[4][1] = "D"
-    self.matrix[6][6] = "D"
-    #self.print()
+        self.matrix_labeled.append(row_labeled)
 
 
   def get(self):
@@ -90,50 +98,52 @@ class Board():
 
   def find_remaining(self):
     self.remaining_locations = []
-    for i in range(0, 8):
-      for j in range(0, 7):
+    for i in range(8):
+      for j in range(7):
         self.remaining_locations.append([i, j])
-          # if self.matrix[i][j] == "-":
-          #   self.remaining_locations.append([i, j])
-          # if self.matrix[i][j] == "D":
-          #   self.remaining_locations.append([i, j])
 
   def is_solvable(self):
     
-    self.matrix2 = deepcopy(self.matrix)
+    self.matrix_colored = deepcopy(self.matrix)
     # Mask all the filled pieces
     for i in range(8):
       for j in range(7):
-        if isinstance(self.matrix2[i][j], int) or self.matrix2[i][j] == "D" or self.matrix2[i][j] == "X":
-          self.matrix2[i][j] = -1
+        if isinstance(self.matrix_colored[i][j], int) or self.matrix_colored[i][j] == "D" or self.matrix_colored[i][j] == "X":
+          self.matrix_colored[i][j] = -1
 
     color = 0
     # color the empty spaces
     for i in range(8):
       for j in range(7):
-        if self.matrix2[i][j] == "-":
-          if self.fill(i, j, self.matrix2[i][j], color):
+        if self.matrix_colored[i][j] == "-":
+          if self.fill(i, j, self.matrix_colored[i][j], color):
             color += 1
 
     totals = {}
     for i in range(8):
       for j in range(7):
-        if self.matrix2[i][j] != -1:
-          totals[self.matrix2[i][j]] = totals.setdefault(self.matrix2[i][j], 0) + 1
-   # print(np.array(self.matrix2))
-   # print(totals)
+        if self.matrix_colored[i][j] != -1:
+          totals.setdefault(self.matrix_colored[i][j], []).append((i,j))
 
     for i in totals:
-      #print(totals[i])
-      if totals[i] < 4:
+      if len(totals[i]) == 4:
+        # check for 2x2 void
+        if totals[i][0][1] == totals[i][2][1]: # left is same col
+          if totals[i][1][1] == totals[i][3][1]: # right is same col
+            if totals[i][0][0] == totals[i][1][0]: # top is same row
+              if totals[i][2][0] == totals[i][3][0]: # bottom is same row
+                # print("Eeek! Found a 2x2 void!", file=open('output.txt', 'a'))
+                # self.print()
+                return False
+      if len(totals[i]) < 4:
         return False
 
     return True
 
   def fill(self, row, col, initial, color):
-    if row < 0 or row >= len(self.matrix2) or col < 0 or col >= len(self.matrix2[0]) or self.matrix2[row][col] != initial:
+    if row < 0 or row >= len(self.matrix_colored) or col < 0 or col >= len(self.matrix_colored[0]) or self.matrix_colored[row][col] != initial:
       return False
-    self.matrix2[row][col] = color
+    self.matrix_colored[row][col] = color
     self.fill(row - 1, col, initial, color)
     self.fill(row + 1, col, initial, color)
     self.fill(row, col - 1, initial, color)
@@ -168,3 +178,17 @@ class Board():
     #     print(self.matrix[i][j], end=" ")
     #   print("")
     # print("\n")
+
+  def print_labeled(self):
+    for i in range(8):
+      for j in range(7):
+          print(self.matrix_labeled[i][j], end=" ", file=open('output.txt', 'a'))
+      print("", file=open('output.txt', 'a'))
+    print("\n", file=open('output.txt', 'a'))
+
+  def print_colored(self):
+    for i in range(8):
+      for j in range(7):
+          print(self.matrix_colored[i][j], end=" ", file=open('output.txt', 'a'))
+      print("", file=open('output.txt', 'a'))
+    print("\n", file=open('output.txt', 'a'))
