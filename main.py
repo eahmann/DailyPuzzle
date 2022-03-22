@@ -1,4 +1,4 @@
-from datetime import date, datetime
+from datetime import datetime
 import random as r
 from copy import deepcopy
 import itertools
@@ -11,7 +11,8 @@ class Game():
     def __init__(self, year=datetime.now().year,
                  month=datetime.now().month, day=datetime.now().day):
         self.year, self.month, self.day = year, month, day
-        # Some output file stuff
+        
+        # Setup output path
         self.output_filename = "output/" + "_".join(
             [str(self.year), str(self.month), str(self.day)]) + ".txt"
         if not os.path.exists('output'):
