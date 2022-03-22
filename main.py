@@ -217,5 +217,5 @@ class Game():
 
 
 if __name__ == "__main__":
-    g = Game(2022, 3, 23)
+    g = Game()
     g.solver()
