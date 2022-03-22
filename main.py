@@ -1,134 +1,220 @@
+from datetime import date, datetime
 import random as r
-import numpy as np
 from copy import deepcopy
 import itertools
 from piece import Piece
 from board import Board
+import os
+
 
 class Game():
+    def __init__(self, year=datetime.now().year,
+                 month=datetime.now().month, day=datetime.now().day):
+        self.year, self.month, self.day = year, month, day
+        # Some output file stuff
+        self.output_filename = "output/" + "_".join(
+            [str(self.year), str(self.month), str(self.day)]) + ".txt"
+        if not os.path.exists('output'):
+            os.makedirs('output')
 
-    def __init__(self):
-      self.pieces = {}
-      self.piece_order_permutations = list(itertools.permutations([0,1,2,3,4,5,6,7,8,9],10))
-      self.generate_pieces()
-      self.order_rotations = self.generate_order_rotations()
+        # Dictionary for pieces and their rotations
+        self.pieces = {}
+        self.generate_pieces()
 
-    def generate_pieces(self):
-      piece_defs = ["000|00-","11|1-|1-|1-", "22|2-|22", "333|3--","--4|444|4--", "-55|55-", "666|-6-|-6-", "7--|7--|777", "-8|88|8-|8-", "9999"]
+        # A list of all possible ways to order the pieces (10 digits, 0 to 9)
+        self.order_permutations = list(itertools.permutations(
+            [i for i in range(len(self.pieces))], len(self.pieces)))
 
-      for i, code in enumerate(piece_defs, start=0):
-        piece = Piece(code)
-        self.pieces.setdefault(i, []).append(piece.get().tolist())
+        self.stack = []
+        # Initialize the blank board here so we can print it only once per run
+        self.stack.append(
+            Board(
+                self.year,
+                self.month,
+                self.day,
+                self.output_filename))
+        print("Solving for date:", self.year, self.month, self.day, file=open(
+            self.output_filename, 'a'))
+        self.stack[0].print()
 
-        pieceFlipY = deepcopy(piece)
-        pieceFlipY.flipY()
-        if (pieceFlipY.get().tolist() not in self.pieces[i]):
-          self.pieces[i].append(pieceFlipY.get().tolist())
-  
-        pieceFlipX = deepcopy(piece)
-        pieceFlipX.flipX()
-        if (pieceFlipX.get().tolist() not in self.pieces[i]):
-          self.pieces[i].append(pieceFlipX.get().tolist())
-  
-        pieceFlipYFlipX = deepcopy(pieceFlipY)
-        pieceFlipYFlipX.flipX()
-        if (pieceFlipYFlipX.get().tolist() not in self.pieces[i]):
-            self.pieces[i].append(pieceFlipYFlipX.get().tolist())
-  
-        pieceRot90 = deepcopy(piece)
-        pieceRot90.rot90()
-        if (pieceRot90.get().tolist() not in self.pieces[i]):
-            self.pieces[i].append(pieceRot90.get().tolist())
-  
-        pieceRot90FlipY = deepcopy(pieceRot90)
-        pieceRot90FlipY.flipY()
-        if (pieceRot90FlipY.get().tolist() not in self.pieces[i]):
-            self.pieces[i].append(pieceRot90FlipY.get().tolist())
-  
-        pieceRot90FlipX = deepcopy(pieceRot90)
-        pieceRot90FlipX.flipX()
-        if (pieceRot90FlipX.get().tolist() not in self.pieces[i]):
-            self.pieces[i].append(pieceRot90FlipX.get().tolist())
-  
-        pieceRot90FlipYFlipX = deepcopy(pieceRot90FlipY)
-        pieceRot90FlipYFlipX.flipX()
-        if (pieceRot90FlipYFlipX.get().tolist() not in self.pieces[i]):
-            self.pieces[i].append(pieceRot90FlipYFlipX.get().tolist())
-  
-        # Print out the pieces
-        # for k in range(len(self.pieces[i])):
-        #     print(np.array(self.pieces[i][k]))
-        #     print("\n")
-        # print("-"*15,"\n")
-
-    def remove_piece(self, i):
-      self.pieces.pop(i)
-
-    def overlay_piece(self, row, col, p):
-      matrix = deepcopy(self.b.get())
-      
-      for i in range(len(p)):
-          for j in range(len(p[0])):
-            try: # this should catch invalid matrix locations (ie.. placing a piece too close to the edge)
-              if p[i][j] == "-":
-                continue
-              else:
-                if matrix[row + i][col + j] == "X":
-                  return False
-                elif matrix[row + i][col + j] == "D":
-                  return False
-                elif isinstance(matrix[row + i][col + j] , int):
-                  return False
-                else: matrix[row + i][col + j] = int(p[i][j])
-            except:
-              return
-      self.b.set(matrix)
-      return True
+        # Contains a list of 2d list for maintaining the state of the game
+        # [[{piece number}, {current rotation (0..n)}, {max rotation (n)}]]
+        self.state = []
+        self.solutions = []
 
     def get_order(self) -> list:
-      return list(self.piece_order_permutations.pop(r.randrange(0, len(self.piece_order_permutations))))
+        '''
+        Return a randomly selected order permutation
+        '''
+        return list(self.order_permutations.pop(
+            r.randrange(0, len(self.order_permutations))))
 
-    def generate_order_rotations(self) -> list:
-      indices = {}
-      for i in self.pieces:
-        for j in range(len(self.pieces[i])):
-          indices.setdefault(i, []).append(j)
-      return list(itertools.product(*indices.values()))
+    def init_next_order(self):
+        '''
+        Initialize the state of the game with a new order
+        '''
+        self.state = []
+        for i in self.get_order():
+            self.state.append([i, 0, len(self.pieces[i]) - 1])
+
+    def generate_pieces(self):
+        '''
+        Generate all possible rotations/reflections of each piece and add it to the dictionary
+        '''
+        piece_defs = [
+            "000|00-",
+            "11|1-|1-|1-",
+            "22|2-|22",
+            "333|3--",
+            "--4|444|4--",
+            "-55|55-",
+            "666|-6-|-6-",
+            "7--|7--|777",
+            "-8|88|8-|8-",
+            "9999"]
+
+        for i, code in enumerate(piece_defs, start=0):
+            piece = Piece(code)
+            self.pieces.setdefault(i, []).append(piece.get().tolist())
+
+            pieceFlipY = deepcopy(piece)
+            pieceFlipY.flipY()
+            if (pieceFlipY.get().tolist() not in self.pieces[i]):
+                self.pieces[i].append(pieceFlipY.get().tolist())
+
+            pieceFlipX = deepcopy(piece)
+            pieceFlipX.flipX()
+            if (pieceFlipX.get().tolist() not in self.pieces[i]):
+                self.pieces[i].append(pieceFlipX.get().tolist())
+
+            pieceFlipYFlipX = deepcopy(pieceFlipY)
+            pieceFlipYFlipX.flipX()
+            if (pieceFlipYFlipX.get().tolist() not in self.pieces[i]):
+                self.pieces[i].append(pieceFlipYFlipX.get().tolist())
+
+            pieceRot90 = deepcopy(piece)
+            pieceRot90.rot90()
+            if (pieceRot90.get().tolist() not in self.pieces[i]):
+                self.pieces[i].append(pieceRot90.get().tolist())
+
+            pieceRot90FlipY = deepcopy(pieceRot90)
+            pieceRot90FlipY.flipY()
+            if (pieceRot90FlipY.get().tolist() not in self.pieces[i]):
+                self.pieces[i].append(pieceRot90FlipY.get().tolist())
+
+            pieceRot90FlipX = deepcopy(pieceRot90)
+            pieceRot90FlipX.flipX()
+            if (pieceRot90FlipX.get().tolist() not in self.pieces[i]):
+                self.pieces[i].append(pieceRot90FlipX.get().tolist())
+
+            pieceRot90FlipYFlipX = deepcopy(pieceRot90FlipY)
+            pieceRot90FlipYFlipX.flipX()
+            if (pieceRot90FlipYFlipX.get().tolist() not in self.pieces[i]):
+                self.pieces[i].append(pieceRot90FlipYFlipX.get().tolist())
+
+            # Print out the pieces
+            # for k in range(len(self.pieces[i])):
+            #     print(np.array(self.pieces[i][k]))
+            #     print("\n")
+            # print("-"*15,"\n")
 
     def get_piece(self, key, rotation):
-      return self.pieces[key][rotation]
+        '''
+        Return a specific piece
+        '''
+        return self.pieces[key][rotation]
+
+    def solver(self):
+        while self.order_permutations:
+            self.init_next_order()
+            count = 0
+
+            print(
+                "New order:",
+                [i[0] for i in self.state], file=open(
+                    self.output_filename, 'a'), end=" ")
+
+            index = 0  # current index in the order of pieces
+            if len(self.stack) == 0:
+                self.stack.append(
+                    Board(
+                        self.year,
+                        self.month,
+                        self.day,
+                        self.output_filename))
+
+            while index > -1:
+                # Get the latest board from the stack
+                b = deepcopy(self.stack[-1])
+
+                # Get the next piece
+                piece = self.get_piece(
+                    self.state[index][0], self.state[index][1])
+
+                # Try to place the piece on the board
+                placed = b.place_piece(piece)
+
+                # add the board to stack and move to the next piece
+                if placed:
+                    if b.is_solvable():
+                        index += 1
+                        self.stack.append(b)
+                        count += 1
+                    else:
+                        placed = False
+
+                # Wiining solution
+                if index == len(self.state):
+                    if b.get() not in self.solutions:
+                        print("Solution found after {} piece placements.".format(count), file=open(
+                            self.output_filename, 'a'))
+                        self.solutions.append(b.get())
+                        print(
+                            "Solution #{}".format(
+                                len(self.solutions)), self.state, file=open(
+                                self.output_filename, 'a'))
+                        b.print()
+                        index -= 1
+                        count = 0
+
+                        index = self.move_index(index)
+                        self.state[index][1] += 1
+
+                        print(
+                            "Continueing with state:",
+                            self.state, file=open(
+                                self.output_filename, 'a'), end=" ")
+                    else:
+                        print(
+                            "Found duplicate solution with state: {}".format(self.state), file=open(
+                                self.output_filename, 'a'))
+
+                # try the next rotation
+                if not placed:
+                    self.state[index][1] += 1
+                    count += 1
+
+                # backtrack if no more rotations on the current piece
+                if not placed and self.state[index][1] > self.state[index][2]:
+                    index = self.move_index(index)
+                    self.state[index][1] += 1
+
+            print("Failed after {} piece placements.".format(count), file=open(
+                self.output_filename, 'a'))
+
+    def move_index(self, index):
+        # move the index to where the current rotation is not yet max
+        while self.state[index][1] >= self.state[index][2]:
+            index -= 1
+            self.stack.pop()
+
+        # reset state
+        for i in range(index + 1, len(self.state)):
+            self.state[i][1] = 0
+
+        return index
 
 
-    def place_pieces(self, runs = 1):
-      order = self.get_order()
-
-      print("Call #{} with order {}".format(runs, order), file=open('output.txt', 'a'))
-      rotations = self.order_rotations
-      
-
-      #print("order: ", order)
-      for j in rotations: # j is a list
-        # print("With piece rotation {}".format(j), file=open('output.txt', 'a'))
-        self.b = Board()
-        remaining = deepcopy(order)
-        for i in order: # i is an int
-          self.b.find_remaining()
-          piece = self.get_piece(i, j[i])
-          placed = False
-          while not placed:
-            try: 
-                location = self.b.next_location()
-            except:
-              break
-            placed = self.overlay_piece(location[0], location[1], piece)
-          if (placed):
-            remaining.pop(remaining.index(i))
-          if len(remaining) == 0:
-            print("Winner! With piece order {} and rotation {}".format(j, order), file=open('output.txt', 'a'))
-            self.b.print()
-          #print(np.array(piece))
-
-      self.place_pieces(runs + 1)          
-
-g = Game()
-g.place_pieces()
+if __name__ == "__main__":
+    g = Game(2022, 3, 23)
+    g.solver()
