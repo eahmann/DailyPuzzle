@@ -182,7 +182,9 @@ class Game():
                                 self.output_filename, 'a'), end=" ")
                     else:
                         print(
-                            "Found duplicate solution with state: {}".format(self.state), file=open(
+                            "Duplicate solution found after {} piece placements.".format(count), file=open(
+                                self.output_filename, 'a'))
+                        print("With state: {}".format(self.state), file=open(
                                 self.output_filename, 'a'))
                         b.print()
                     index -= 1
