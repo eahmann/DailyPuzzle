@@ -189,6 +189,12 @@ class Game():
                         print(
                             "Found duplicate solution with state: {}".format(self.state), file=open(
                                 self.output_filename, 'a'))
+                        b.print()
+                        index -= 1
+                        count = 0
+
+                        index = self.move_index(index)
+                        self.state[index][1] += 1
 
                 # try the next rotation
                 if not placed:
